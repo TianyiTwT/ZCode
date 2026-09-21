@@ -1,0 +1,49 @@
+name: build
+
+on:
+  push:
+    branches: ["dev", "main"]
+  pull_request:
+    branches: ["dev", "main"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: verify + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          # 与 package.json 的 packageManager、mise.toml 保持一致
+          version: 10.33.2
+
+      - uses: actions/setup-node@v4
+        with:
+          # engines 要求 node>=24；这里锁 mise.toml 里的版本，避免大版本漂移
+          node-version: 24.14.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build packages
+        run: pnpm build
+
+# 说明：
+# 这里只做「能不能装起来、能不能过类型、能不能编译出来」的校验，不打包安装包。
+# 桌面端安装包（Windows / macOS / Linux）需要平台相关的运行时准备
+# （prepare:desktop-runtime、native-search 的 CMake 构建、macOS 签名等），
+# 放在 release 流程里按 tag 触发更合适，见 .release-it.mjs 与 scripts/build-zcode.mjs。

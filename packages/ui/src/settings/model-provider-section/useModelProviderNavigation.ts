@@ -19,7 +19,6 @@ import {
   CODING_PLAN_PROVIDER_SPECS,
   type CodingPlanEntitlementState,
   type ModelProviderNavGroup,
-  type PresetProviderSpec,
 } from "@/settings/model-provider-section/constants.js";
 import { pickCodingPlanEntitlementProvider } from "@/lib/codingPlanProvider.js";
 import {
@@ -37,12 +36,7 @@ import {
   resolveCodingPlanEntitlementState,
 } from "@/settings/model-provider-section/providerFamilyConnectionVisibility.js";
 
-interface PresetProviderWithConfig extends PresetProviderSpec {
-  provider: ProviderSettingsFormProvider | null;
-}
-
 interface UseModelProviderNavigationOptions {
-  presetProviders: PresetProviderWithConfig[];
   modelProviders: ProviderSettingsFormProvider[];
   /**
    * 当前账号明确有权益的 Provider。缺省等价于尚无账号权益；生产设置页始终显式传入。
@@ -64,7 +58,6 @@ interface UseModelProviderNavigationOptions {
 }
 
 export function useModelProviderNavigation({
-  presetProviders,
   modelProviders,
   entitledAccountProviderIds = new Set(),
   modelProvidersLoading = false,
@@ -177,39 +170,14 @@ export function useModelProviderNavigation({
     ],
   );
 
-  const navigationGroups = useMemo<ModelProviderNavGroup[]>(() => {
-    const groups: ModelProviderNavGroup[] = [
-      {
-        id: "preset",
-        title: intl.formatMessage({ id: "settings.modelProvider.presetTitle" }),
-        items: [
-          ...presetProviders.map(({ id, displayName, provider }) => {
-            const statusProvider = resolvePresetFamilyStatusProvider({
-              presetId: id,
-              provider,
-              connectionModeItems: connectionModeCodingPlanItems,
-              connectionSelections,
-              modelProviders,
-            });
-            return {
-              key: createPresetProviderNodeKey(id),
-              type: "preset" as const,
-              presetId: id,
-              label: displayName,
-              logo: modelProviders.find(
-                (candidate) =>
-                  candidate.providerId ===
-                  resolveModelProviderFamilySpecByProviderId(id)?.individualCodingPlanProviderId,
-              )?.config.logo,
-              provider,
-              displayName,
-              statusProvider,
-              statusActive: statusProvider?.executable === true,
-            };
-          }),
-          ...codingPlanItems.filter((item) => isStartPlanModelProviderId(item.presetId)),
-        ],
-      },
+  // 侧边栏只保留「自定义供应商」一组。
+  // 原因：内置的智谱套餐预设（Coding Plan / Team / Start Plan）必须先在账号侧取得权益才能用，
+  // 未登录或不用智谱时点进去只会落到一个无法完成的连接流程，所以整组移除，
+  // 需要智谱时走「添加供应商」自己填 baseUrl 与 API Key。
+  // 注意：套餐与连接态的计算（codingPlanItems / connectionModeCodingPlanItems）仍然保留在下方，
+  // 供选中项回落与详情页消费；这次只摘掉侧栏入口，没有删除 Coding Plan 链路。
+  const navigationGroups = useMemo<ModelProviderNavGroup[]>(
+    () => [
       {
         id: "custom",
         title: intl.formatMessage({ id: "settings.modelProvider.customTitle" }),
@@ -221,21 +189,9 @@ export function useModelProviderNavigation({
           statusActive: provider.executable === true,
         })),
       },
-    ];
-
-    return groups;
-  }, [
-    customProviders,
-    codingPlanItems,
-    connectionModeCodingPlanItems,
-    // 左侧导航分组标题在这个 memo 内格式化。
-    // 语言切换时 provider/权益引用可能不变，必须依赖 intl 才能刷新旧 locale 的文案。
-    intl,
-    connectionSelections,
-    pendingConnectionSelections,
-    presetProviders,
-    modelProviders,
-  ]);
+    ],
+    [customProviders, intl],
+  );
 
   const navigationItems = useMemo(() => {
     const visibleItems = navigationGroups.flatMap((group) => group.items);
@@ -299,9 +255,15 @@ export function useModelProviderNavigation({
         ),
       ));
 
+  // 初始落点必须只用「侧栏可见项」来挑：
+  // navigationItems 是侧栏的超集（还含连接方式类的 Coding Plan 项），
+  // 而这里要产出的是侧栏 node key。喂超集时，
+  // resolveSideNavigationNodeKeyForConnectionItem 会把连接项映射成 preset:* 的 key，
+  // 一旦侧栏没有预设组，这个 key 就落不到任何侧栏项上，
+  // 选中态反复回落却始终无效，详情页会永久停在 loading。
   const fallbackNodeKey = resolveFallbackModelProviderNodeKey({
     selectedNodeKey,
-    selectableNavigationItems,
+    selectableNavigationItems: selectableSideNavigationItems,
   });
   useEffect(() => {
     const hasSelectedNode = selectedNodeKey ? sideNavigationItemByKey.has(selectedNodeKey) : false;
@@ -336,38 +298,6 @@ function shouldShowCodingPlanForProviderFamilyDomain(
     return true;
   }
   return resolveProviderFamilyDomainFromOAuthProvider(oauthProviderId) === providerFamilyDomain;
-}
-
-function resolvePresetFamilyStatusProvider({
-  presetId,
-  provider,
-  connectionModeItems,
-  connectionSelections,
-  modelProviders,
-}: {
-  presetId: PresetProviderSpec["id"];
-  provider: ProviderSettingsFormProvider | null;
-  connectionModeItems: ModelProviderNavGroup["items"];
-  connectionSelections: ProviderFamilyConnectionSelectionSettings;
-  modelProviders: ProviderSettingsFormProvider[];
-}): ProviderSettingsFormProvider | null {
-  const familySpec = resolveModelProviderFamilySpecByProviderId(presetId);
-  if (!familySpec) {
-    return provider;
-  }
-  const connectionItem = pickFamilyModeNavigationItem(
-    connectionModeItems.filter((item) => item.type !== "codingPlanLoading"),
-    familySpec.id,
-    connectionSelections,
-  );
-  if (!connectionItem || !isPlanConnectionNavigationItem(connectionItem)) {
-    return null;
-  }
-  // 菜单 Team 项可能从个人项派生，携带的 provider 不是团队执行身份。
-  // 必须按具体套餐 ID 回到 Settings View，不能用菜单权益或继承的 provider 点灯。
-  return (
-    modelProviders.find((candidate) => candidate.providerId === connectionItem.presetId) ?? null
-  );
 }
 
 function resolveFallbackModelProviderNodeKey({

@@ -25,6 +25,12 @@ import {
 import { DEFAULT_CODE_PREVIEW_SETTINGS } from "@/lib/codePreviewSettings.js";
 import { readSafeLocalStorage, writeSafeLocalStorage } from "@/lib/browserEnvironment.js";
 import {
+  loadLocalProfileSettings,
+  normalizeLocalProfileSettings,
+  persistLocalProfileSettings,
+  type LocalProfileSettings,
+} from "@/lib/localProfile.js";
+import {
   applyUiFontSizePx,
   loadUiFontSizePx,
   normalizeUiFontSizePx,
@@ -115,6 +121,13 @@ export interface ZCodeState {
   /** 代码预览设置 */
   codePreviewSettings: CodePreviewSettings;
   setCodePreviewSettings: (patch: Partial<CodePreviewSettings>) => void;
+
+  /**
+   * 本机个人资料（侧边栏底部的头像与名称）。
+   * 与账号登录态解耦：登录只影响远端能力，界面身份一律取这里。
+   */
+  localProfile: LocalProfileSettings;
+  setLocalProfile: (patch: Partial<LocalProfileSettings>) => void;
 
   /** UI 根 rem 字号（px） */
   uiFontSizePx: number;
@@ -283,6 +296,16 @@ export function createZCodeStore(
         };
         writeSafeLocalStorage(CODE_PREVIEW_SETTINGS_KEY, JSON.stringify(next));
         return { codePreviewSettings: next };
+      }),
+
+    localProfile: loadLocalProfileSettings(),
+    setLocalProfile: (patch: Partial<LocalProfileSettings>) =>
+      set((state) => {
+        // 复用同一套归一化，保证界面输入、localStorage 存量数据、跨来源 patch
+        // 走完全一致的裁剪与校验规则，不在 UI 层各自实现一份。
+        const next = normalizeLocalProfileSettings({ ...state.localProfile, ...patch });
+        persistLocalProfileSettings(next);
+        return { localProfile: next };
       }),
 
     uiFontSizePx: loadUiFontSizePx(),

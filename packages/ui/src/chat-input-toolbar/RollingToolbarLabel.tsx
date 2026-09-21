@@ -37,6 +37,18 @@ function usePrefersReducedMotion() {
   return prefersReducedMotion;
 }
 
+/**
+ * 外层容器负责定高与裁切，内层行负责「单行不换行 + 右侧截断」。
+ * 两层结构必须在动效和关闭动效两种分支里保持一致：
+ * 调用方会按 [&>span>span] 这类后代选择器给内层行加 display，一旦某个分支少了一层，
+ * 那条规则就会落到 prefix/value 上把它们拆成上下两行，再被外层 overflow-hidden 裁掉半行。
+ */
+const LABEL_WRAPPER_CLASS_NAME =
+  "relative inline-flex h-[1.3em] min-w-0 max-w-full items-center overflow-hidden leading-[1.25]";
+
+const LABEL_ROW_CLASS_NAME =
+  "inline-flex min-w-0 max-w-full flex-nowrap items-center whitespace-nowrap leading-[1.25]";
+
 export function RollingToolbarLabel({
   label,
   className,
@@ -54,8 +66,9 @@ export function RollingToolbarLabel({
   const content =
     prefix !== undefined && value !== undefined ? (
       <>
-        <span className={prefixClassName}>{prefix}</span>
-        <span>{value}</span>
+        {/* prefix 固定不收缩，宽度不够时只截断 value，避免把 "DeepSeek/" 也一起吃掉。 */}
+        <span className={cn("shrink-0", prefixClassName)}>{prefix}</span>
+        <span className="min-w-0 truncate">{value}</span>
       </>
     ) : (
       label
@@ -63,24 +76,18 @@ export function RollingToolbarLabel({
 
   if (reducedMotion) {
     return (
-      <span className={className} title={label}>
-        {content}
+      <span className={cn(LABEL_WRAPPER_CLASS_NAME, className)} title={label}>
+        <span className={LABEL_ROW_CLASS_NAME}>{content}</span>
       </span>
     );
   }
 
   return (
-    <span
-      className={cn(
-        "relative inline-flex h-[1.3em] min-w-0 items-center overflow-hidden leading-[1.25]",
-        className,
-      )}
-      title={label}
-    >
+    <span className={cn(LABEL_WRAPPER_CLASS_NAME, className)} title={label}>
       <AnimatePresence initial={false} mode="popLayout">
         <motion.span
           key={label}
-          className="inline-flex min-w-0 whitespace-nowrap leading-[1.25]"
+          className={LABEL_ROW_CLASS_NAME}
           initial={{ y: "0.75em", opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: "-0.75em", opacity: 0 }}

@@ -282,6 +282,13 @@ export function useRootWorkspaceActions({
     [addTab, intl, tabStoreApi, workbenchGroupClientMode],
   );
 
+  /**
+   * 账号退出流程。
+   *
+   * 界面已不再提供退出入口（侧边栏底部改为本机个人资料，登录/断开连接一并移除），
+   * 但这里保留完整实现：它同时负责清理由登录派生的 provider 状态与 Coding Plan webview 存储，
+   * 模型供应商侧若重新需要“退出当前账号”能力，直接接线即可，不必重写这套清理顺序。
+   */
   const handleLogout = useCallback(async () => {
     let runningAgentSessionCount: number | null = null;
     try {

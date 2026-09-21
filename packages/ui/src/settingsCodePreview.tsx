@@ -22,6 +22,8 @@ import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import type { CodePreviewSettings } from "@/store/index.js";
 import { THEME_MODES } from "@/settings/settingsPageConfig.js";
 import { MAX_UI_FONT_SIZE_PX, MIN_UI_FONT_SIZE_PX } from "@/lib/uiFontSize.js";
+import { LocalProfileSection } from "@/settings/LocalProfileSection.js";
+import type { LocalProfileSettings } from "@/lib/localProfile.js";
 
 function FontSizeInput({
   value,
@@ -85,6 +87,8 @@ export function AppearanceSectionContent({
   setTheme,
   uiFontSizePx,
   setUiFontSizePx,
+  localProfile,
+  setLocalProfile,
 }: {
   codePreviewSettings: CodePreviewSettings;
   setCodePreviewSettings: (settings: Partial<CodePreviewSettings>) => void;
@@ -92,6 +96,8 @@ export function AppearanceSectionContent({
   setTheme: (theme: Theme) => void;
   uiFontSizePx: number;
   setUiFontSizePx: (fontSizePx: number) => void;
+  localProfile: LocalProfileSettings;
+  setLocalProfile: (patch: Partial<LocalProfileSettings>) => void;
 }) {
   const { intl } = useZCodeIntl();
   const activePreviewMode = resolveTheme(theme);
@@ -155,6 +161,8 @@ export function AppearanceSectionContent({
           </CardContent>
         </Card>
       </div>
+
+      <LocalProfileSection localProfile={localProfile} setLocalProfile={setLocalProfile} />
 
       <div className="space-y-6">
         <div className="min-w-0 space-y-3">

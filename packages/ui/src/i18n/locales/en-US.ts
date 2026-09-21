@@ -605,6 +605,7 @@ const enUS: Record<string, string> = {
   "logout.confirm.ok": "Disconnect and restart",
   "logout.confirm.cancel": "Cancel",
   "sidebar.profile.notLoggedIn": "Connect",
+  "sidebar.profile.localFallback": "Local user",
   "app.selectFile": "Select a file to get started",
   "app.workspace": "Workspace",
   "browser.title": "Browser",
@@ -1792,6 +1793,33 @@ const enUS: Record<string, string> = {
   "settings.shortcuts.command.resetZoom": "Reset Zoom",
   "settings.appearance.interfaceTitle": "Interface Setting",
   "settings.appearance.interfaceDescription": "Choose the app theme and interface text size.",
+  "settings.appearance.profileTitle": "Profile",
+  "settings.appearance.profileDescription":
+    "The avatar and name at the bottom of the sidebar are stored on this machine. No account or sign-in is involved.",
+  "settings.localProfile.showInSidebar": "Show avatar and name in the sidebar",
+  "settings.localProfile.showInSidebarDescription":
+    "When off, only the settings entry remains at the bottom of the sidebar.",
+  "settings.localProfile.name": "Name",
+  "settings.localProfile.nameDescription":
+    "Up to 24 characters. Leave empty to use the default name.",
+  "settings.localProfile.namePlaceholder": "Enter a display name",
+  "settings.localProfile.avatar": "Avatar",
+  "settings.localProfile.avatarDescription":
+    "PNG, JPG, WebP and other image formats are supported. After choosing, drag and zoom to set the framing; the avatar is cropped to a circle, compressed, and stored on this machine.",
+  "settings.localProfile.avatarChoose": "Choose image",
+  "settings.localProfile.avatarRemove": "Remove",
+  "settings.localProfile.avatarError": "This image cannot be used as an avatar. Please try another one.",
+  "settings.localProfile.avatarUnsupportedType": "Please choose an image file (PNG, JPG, WebP, and so on).",
+  "settings.localProfile.avatarTooLarge":
+    "The image is still too large after compression. Please try a smaller one.",
+  "settings.localProfile.cropTitle": "Adjust avatar",
+  "settings.localProfile.cropDescription":
+    "Drag the image to reposition it, then zoom with the slider or the scroll wheel. Everything outside the circle is cropped away.",
+  "settings.localProfile.cropZoom": "Zoom",
+  "settings.localProfile.cropCanvasLabel":
+    "Avatar framing area. Drag to reposition, use the arrow keys for fine adjustment, and hold Shift for larger steps.",
+  "settings.localProfile.cropCancel": "Cancel",
+  "settings.localProfile.cropConfirm": "Save",
   "settings.appearance.codeTitle": "Code settings",
   "settings.appearance.codeDescription":
     "Choose code themes, font size, and display options independently from the interface font size.",
@@ -3047,6 +3075,32 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.models": "Model list",
   "settings.modelProvider.modelsEmpty": "No models are configured. Add a model to use it in chat.",
   "settings.modelProvider.addModel": "Add model",
+  "settings.modelProvider.catalog.fetch": "Fetch available models",
+  "settings.modelProvider.catalog.title": "Available models",
+  "settings.modelProvider.catalog.description":
+    "Read from this provider's model list endpoint. Fetched models are exactly equivalent to models you add by hand — they share the same configuration.",
+  "settings.modelProvider.catalog.descriptionWithProvider":
+    "Read from {provider}'s model list endpoint. Fetched models are exactly equivalent to models you add by hand.",
+  "settings.modelProvider.catalog.filter": "Filter models",
+  "settings.modelProvider.catalog.loading": "Fetching model list",
+  "settings.modelProvider.catalog.empty": "No matching models.",
+  "settings.modelProvider.catalog.added": "Added",
+  "settings.modelProvider.catalog.notAdded": "Not added",
+  "settings.modelProvider.catalog.action.add": "Add model {model}",
+  "settings.modelProvider.catalog.action.remove": "Remove model {model}",
+  "settings.modelProvider.catalog.count": "{count} models",
+  "settings.modelProvider.catalog.refresh": "Refresh",
+  "settings.modelProvider.catalog.close": "Close",
+  "settings.modelProvider.catalog.failed.unsupported":
+    "This provider does not expose a model list endpoint. Use “Add model” to enter a model ID manually.",
+  "settings.modelProvider.catalog.failed.unauthorized":
+    "The API key is invalid or lacks permission. Check it and try again.",
+  "settings.modelProvider.catalog.failed.network":
+    "Request failed. Check the network or the base URL and try again.",
+  "settings.modelProvider.catalog.failed.invalid-response":
+    "The endpoint returned unrecognized data. Please enter the model ID manually.",
+  "settings.modelProvider.catalog.failed.not-configured":
+    "This provider still needs a saved base URL and API key.",
   "settings.modelProvider.modelId": "Model ID",
   "settings.modelProvider.modelDisplayName": "Display name",
   "settings.modelProvider.modelApiFormat.anthropic": "Anthropic messages",
